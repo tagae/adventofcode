@@ -1,0 +1,13 @@
+{
+  "name": "adventofcode-2018",
+  "scripts": {
+    "1/part-1": "ts-node days/1/part-1.ts",
+    "1/part-2": "ts-node days/1/part-2.ts"
+  },
+  "dependencies": {
+    "@types/node": "^10.12.12",
+    "rxjs": "^6.3.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.1"
+  }
+}
