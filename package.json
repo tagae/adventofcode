@@ -2,7 +2,9 @@
   "name": "adventofcode-2018",
   "scripts": {
     "1/1": "ts-node days/1/part-1.ts",
-    "1/2": "ts-node days/1/part-2.ts"
+    "1/2": "ts-node days/1/part-2.ts",
+    "2/1": "ts-node days/2/part-1.ts",
+    "2/2": "ts-node days/2/part-2.ts"
   },
   "dependencies": {
     "@types/node": "^10.12.12",
