@@ -18,11 +18,13 @@
     "8/1": "ts-node days/8/part-1.ts",
     "8/2": "ts-node days/8/part-2.ts",
     "9/1": "ts-node days/9/part-1.ts",
-    "9/2": "ts-node days/9/part-2.ts"
+    "9/2": "ts-node days/9/part-2.ts",
+    "10/1": "nodemon --exec ts-node days/10/part-1.ts"
   },
   "dependencies": {
     "@types/node": "^10.12.12",
     "@types/ramda": "^0.25.44",
+    "nodemon": "^1.18.9",
     "ramda": "^0.26.1",
     "rxjs": "^6.3.3",
     "ts-node": "^7.0.1",
