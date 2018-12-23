@@ -16,7 +16,9 @@
     "7/1": "ts-node days/7/part-1.ts",
     "7/2": "ts-node days/7/part-2.ts",
     "8/1": "ts-node days/8/part-1.ts",
-    "8/2": "ts-node days/8/part-2.ts"
+    "8/2": "ts-node days/8/part-2.ts",
+    "9/1": "ts-node days/9/part-1.ts",
+    "9/2": "ts-node days/9/part-2.ts"
   },
   "dependencies": {
     "@types/node": "^10.12.12",
