@@ -19,7 +19,9 @@
     "8/2": "ts-node days/8/part-2.ts",
     "9/1": "ts-node days/9/part-1.ts",
     "9/2": "ts-node days/9/part-2.ts",
-    "10/1": "nodemon --exec ts-node days/10/part-1.ts"
+    "10/1": "ts-node days/10/part-1.ts",
+    "11/1": "ts-node days/11/part-1.ts",
+    "11/2": "ts-node days/11/part-2.ts"
   },
   "dependencies": {
     "@types/node": "^10.12.12",
