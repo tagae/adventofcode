@@ -1,10 +1,85 @@
 (ns adventofcode.2021.day-5
-  (:use clojure.test))
+  (:use clojure.set clojure.test))
 
-(defn with-line-seq
-  [file-name func]
-  (with-open [rdr (clojure.java.io/reader file-name)]
-    (func (line-seq rdr))))
+(defn cardinal-direction
+  [[x1 y1 x2 y2]]
+  (cond
+    (= x1 x2) :south
+    (< y1 y2) :south-east
+    (= y1 y2) :east
+    (> y1 y2) :north-east))
+
+(defn clip-at
+  [& vents]
+  (fn [[x y]]
+    (loop [[next & remainder] vents]
+      (if next
+        (let [[x1 y1 x2 y2] next]
+          (if (and
+               (<= x1 x x2)
+               (or (<= y1 y y2) (<= y2 y y1)))
+            (recur remainder)))
+        (list [x y])))))
+
+(defn intersection-points
+  [vent1 vent2]
+  (let [[x11 y11 x12 y12] vent1
+        [x21 y21 x22 y22] vent2
+        clip (clip-at vent1 vent2)]
+    (condp = (list (cardinal-direction vent1) (cardinal-direction vent2))
+      '(:south :south)
+      (if (= x11 x21)
+        (map #(vector x11 %) (range y21 (inc (min y12 y22)))))
+      '(:south :south-east)
+      (clip [x11 (+ (- x11 x21) y21)])
+      '(:south :east)
+      (clip [x11 y21])
+      '(:south :north-east)
+      (clip [x11 (+ (- x21 x11) y21)])
+      '(:south-east :south-east)
+      (if (= (- x11 y11) (- x21 y21))
+        (for [x (range x21 (inc (min x12 x22)))
+              :let [y (+ (- x x21) y21)]]
+          [x y]))
+      '(:south-east :east)
+      (clip [(+ (- y21 y11) x11) y21])
+      '(:south-east :north-east)
+      (let [x (/ (- (+ y21 x21 x11) y11) 2)]
+        (if (int? x)
+          (clip [x (+ (- x x11) y11)])))
+      '(:east :east)
+      (if (= y11 y21)
+        (map #(vector % y11) (range x21 (inc (min x12 x22)))))
+      '(:east :north-east)
+      (clip [(- (+ x21 y21) y11) y11])
+      '(:north-east :north-east)
+      (if (= (+ x11 y11) (+ x21 y21))
+        (for [x (range x21 (inc (min x12 x22)))
+              :let [y (+ (- x21 x) y21)]]
+          [x y])))))
+
+(defn pairwise
+  [op coll]
+  (loop [[next & remainder] coll
+         result '()]
+    (if (empty? remainder)
+      result
+      (recur remainder (concat result (mapcat #(op next %) remainder))))))
+
+(defn orient-south-eastward
+  [[x1 y1 x2 y2]]
+  (if (or (> x1 x2) (and (= x1 x2) (> y1 y2)))
+    [x2 y2 x1 y1]
+    [x1 y1 x2 y2]))
+
+(def cardinal-direction-order
+  {:south 0 :south-east 1 :east 2 :north-east 3})
+
+(defn vent-order
+  [coords]
+  [(cardinal-direction-order (cardinal-direction coords))
+   (first coords)
+   (second coords)])
 
 (defn parse-vents
   [vent-lines]
@@ -12,106 +87,37 @@
             (mapv #(Integer/parseInt %) (re-seq #"\d+" vent-line)))]
     (map parse-vent vent-lines)))
 
-(defn from-to
-  [a b]
-  (if (>= a b)
-    (take (inc (- a b)) (iterate dec a))
-    (take (inc (- b a)) (iterate inc a))))
-
-(defn bounds
-  [[x1 y1 x2 y2]]
-  (let [left (min x1 x2)
-        right (max x1 x2)
-        top (min y1 y2)
-        bottom (max y1 y2)]
-    [left top right bottom]))
-
-(defn is-vertical
-  [[x1 y1 x2 y2]]
-  (= x1 x2))
-
-(defn is-horizontal
-  [[x1 y1 x2 y2]]
-  (= y1 y2))
-
-(defn parallel-intersection-points
-  [f c11 c12 c21 c22]
-  (let [min1 (min c11 c12) max1 (max c11 c12)
-        min2 (min c21 c22) max2 (max c21 c22)]
-    (if (or (> min1 max2) (< max1 min2))
-      '()
-      (map f (range (max min1 min2) (inc (min max1 max2)))))))
-
-(defn perpendicular-intersection-points
-  [[x11 y11 x12 y12] [x21 y21 x22 y22]]
-  (let [min-x1 (min x11 x12)
-        min-y1 (min y11 y12)
-        min-x2 (min x21 x22)
-        min-y2 (min y21 y22)
-        max-x1 (max x11 x12)
-        max-y1 (max y11 y12)
-        max-x2 (max x21 x22)
-        max-y2 (max y21 y22)]
-    (cond
-      (> min-x1 max-x2) '()
-      (< max-x1 min-x2) '()
-      (> min-y1 max-y2) '()
-      (< max-y1 min-y2) '()
-      (and (= min-x1 max-x1) (= min-y2 max-y2)) (list [min-x1 min-y2])
-      (and (= min-x2 max-x2) (= min-y1 max-y1)) (list [min-x2 min-y1])
-      :else (throw (AssertionError. "unexpected case")))))
-
-(defn intersection-points
-  [[x11 y11 x12 y12] [x21 y21 x22 y22]]
-  (cond
-    (= x11 x12 x21 x22) (parallel-intersection-points (fn [y] [x11 y]) y11 y12 y21 y22)
-    (= y11 y12 y21 y22) (parallel-intersection-points (fn [x] [x y11]) x11 x12 x21 x22)
-    (and (= x11 x12) (= x21 x22)) '() ; parallel but on different axis
-    (and (= y11 y12) (= y21 y22)) '() ; parallel but on different axis
-    :else (perpendicular-intersection-points [x11 y11 x12 y12] [x21 y21 x22 y22])))
-
-(deftest vertical-intersection
-  (is (= '([1 2] [1 3]) (intersection-points [1 0 1 3] [1 2 1 5])))
-  (is (= '() (intersection-points [1 0 1 3] [1 4 1 6]))))
-
-(deftest horizontal-intersection
-  (is (= '([2 1] [3 1]) (intersection-points [0 1 3 1] [2 1 5 1])))
-  (is (= '() (intersection-points [0 1 3 1] [4 1 6 1]))))
-
-(deftest perpendicular-intersection
-  (is (= '([7 4]) (intersection-points [7 0 7 4] [9 4 3 4]))))
-
-(comment
-  (for [x1 (from-to x11 x12)
-        y1 (from-to y11 y12)
-        x2 (from-to x21 x22)
-        y2 (from-to y21 y22)
-        :when (and (= x1 x2) (= y1 y2))]
-    [x1 y1]))
-
-(defn all-intersection-points
-  [vents]
-  (loop [[vent & remainder] vents
-         found-points '()]
-    (if (empty? remainder)
-      (set found-points)
-      (recur remainder (concat found-points (mapcat #(intersection-points vent %) remainder))))))
-
-(deftest parallel-vent-intersection
-  (is (= '([0 9] [1 9] [2 9])
-         (intersection-points [0 9 5 9] [0 9 2 9]))))
+(defn read-vents
+  [vent-lines]
+  (sort-by vent-order
+           (map orient-south-eastward
+                (parse-vents vent-lines))))
 
 (defn part1
   [vent-lines]
-  (count
-   (all-intersection-points
-    (filter #(or (is-vertical %) (is-horizontal %))
-            (parse-vents vent-lines)))))
+  (count (set (pairwise intersection-points
+                        (filter #(#{:south :east} (cardinal-direction %))
+                                (read-vents vent-lines))))))
+
+(defn part2
+  [vent-lines]
+  (count (set (pairwise intersection-points (read-vents vent-lines)))))
+
+(defn with-line-seq
+  [file-name func]
+  (with-open [rdr (clojure.java.io/reader file-name)]
+    (func (line-seq rdr))))
 
 (deftest part1-example
   (is (= 5 (with-line-seq "day-5-example.txt" part1))))
 
-(deftest part1-example
+(deftest part1-input
   (is (= 7674 (with-line-seq "day-5-input.txt" part1))))
+
+(deftest part2-example
+  (is (= 12 (with-line-seq "day-5-example.txt" part2))))
+
+(deftest part2-input
+  (is (= 20898 (with-line-seq "day-5-input.txt" part2))))
 
 (run-tests 'adventofcode.2021.day-5)
