@@ -1,12 +1,12 @@
 Setup
 -----
 
-After installing [Node.js](https://nodejs.org/en/),
-move to this directory and do
+After installing [Node.js](https://nodejs.org/en/), move to this directory and
+do
 
-    npm install
+    npm install --ignore-scripts
 
-    
+
 Running a day
 -------------
 
