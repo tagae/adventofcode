@@ -2,71 +2,61 @@
   (:use clojure.test
         [clojure.string :only [join]]))
 
-(def vicinity-coords
+(def vicinity-deltas
   #{[1 0] [-1 0] [1 1] [-1 -1] [1 -1] [-1 1] [0 -1] [0 1]})
 
-(defn with-energy-level-at
-  [energy-levels j i func]
-  (let [grid-bound (dec (count energy-levels))]
-    (if (and (<= 0 j grid-bound) (<= 0 i grid-bound))
-      (let [level ((energy-levels j) i)]
-        (if (number? level)
-          (assoc energy-levels j (assoc (energy-levels j) i (func level)))
-          energy-levels))
-      energy-levels)))
+(defn within-bounds?
+  [energy-levels j i]
+  (let [grid-size (count energy-levels)]
+    (and (<= 0 j) (< j grid-size) (<= 0 i) (< i grid-size))))
 
 (defn increase-level-at
   [energy-levels j i]
-  (with-energy-level-at energy-levels j i inc))
+  (if (within-bounds? energy-levels j i)
+    (let [level ((energy-levels j) i)
+          increased (assoc energy-levels j
+                           (assoc (energy-levels j) i
+                                  (inc level)))]
+      (condp = level
+        9 (reduce (fn [result [delta-j delta-i]]
+                    (increase-level-at result (+ j delta-j) (+ i delta-i)))
+                  increased
+                  vicinity-deltas)
+        increased))
+    energy-levels))
 
-(defn flash-at
-  [energy-levels j i]
-  (with-energy-level-at energy-levels j i (constantly 'f)))
-
-(defn should-flash?
-  [energy-level]
-  (and (number? energy-level) (> energy-level 9)))
-
-(defn propagate-flashes
+(defn step
   [energy-levels]
   (let [grid-size (count energy-levels)]
     (loop [j 0
            i 0
            energy-levels energy-levels]
       (if (< j grid-size)
-        (if (should-flash? ((energy-levels j) i))
-          (let [flashed (flash-at energy-levels j i)]
-            (recur (max 0 (dec j))
-                   (max 0 (dec i))
-                   (reduce (fn [result [delta-j delta-i]]
-                             (increase-level-at result (+ j delta-j) (+ i delta-i)))
-                           flashed
-                           vicinity-coords)))
-          (recur (+ j (quot (inc i) grid-size))
-                 (mod (inc i) grid-size)
-                 energy-levels))
-        energy-levels))))
+        (recur (+ j (quot (inc i) grid-size))
+               (mod (inc i) grid-size)
+               (increase-level-at energy-levels j i))
+        (mapv (fn [row] (mapv #(if (> % 9) 0 %) row)) energy-levels)))))
 
 (defn count-flashes
   [energy-levels]
-  (reduce + (map #(count (filter #{'f} %)) energy-levels)))
+  (reduce + (map #(count (filter #{0} %)) energy-levels)))
 
-(defn reset-flashes
+(defn part1
+  [step-count energy-levels]
+  (reduce +
+          (take step-count
+                (map count-flashes
+                     (drop 1 (iterate step energy-levels))))))
+
+(defn simultaneous-flash?
   [energy-levels]
-  (mapv #(replace {'f 0} %) energy-levels))
+  (every? true? (map (partial every? zero?) energy-levels)))
 
-(defn steps
-  [count energy-levels]
-  (loop [energy-levels energy-levels
-         total-flashes 0
-         remaining-steps count]
-    (if (> remaining-steps 0)
-      (let [increased-levels (mapv #(mapv inc %) energy-levels)
-            propagated-flashes (propagate-flashes increased-levels)]
-        (recur (reset-flashes propagated-flashes)
-               (+ total-flashes (count-flashes propagated-flashes))
-               (dec remaining-steps)))
-      total-flashes)))
+(defn part2
+  [energy-levels]
+  (first
+   (keep-indexed #(if (simultaneous-flash? %2) %1)
+                 (iterate step energy-levels))))
 
 (defn parse-energy-levels
   [lines]
@@ -78,15 +68,33 @@
   (with-open [rdr (clojure.java.io/reader file-name)]
     (func (line-seq rdr))))
 
+(def with-energy-levels
+  #(doall (with-line-seq % parse-energy-levels)))
+
+(defn print-levels
+  [energy-levels]
+  (run! println energy-levels)
+  (println))
+
 (deftest energy-level-parsing
-  (is (= 6 (((with-line-seq "day-11-example.txt" parse-energy-levels) 9) 9))))
+  (is (= 6 (((with-energy-levels "day-11-example.txt") 9) 9))))
+
+(deftest part1-small-example
+  (is (= 9 (part1 2 (with-energy-levels "day-11-small-example.txt")))))
+
+(deftest part1-example-step-10
+  (is (= 204 (part1 10 (with-energy-levels "day-11-example.txt")))))
 
 (deftest part1-example
-  (is (= 1656 (with-line-seq "day-11-example.txt"
-                #(steps 100 (parse-energy-levels %))))))
+  (is (= 1656 (part1 100 (with-energy-levels "day-11-example.txt")))))
 
 (deftest part1-input
-  (is (= 1747 (with-line-seq "day-11-input.txt"
-                #(steps 100 (parse-energy-levels %))))))
+  (is (= 1747 (part1 100 (with-line-seq "day-11-input.txt" parse-energy-levels)))))
+
+(deftest part2-example
+  (is (= 195 (part2 (with-energy-levels "day-11-example.txt")))))
+
+(deftest part2-input
+  (is (= 505 (part2 (with-energy-levels "day-11-input.txt")))))
 
 (run-tests 'adventofcode.2021.day-11)
