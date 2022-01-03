@@ -1,21 +1,35 @@
 (ns adventofcode.2021.day-12
-  (:use clojure.test))
+  (:use clojure.test
+        [clojure.set :only [map-invert]]))
 
 (defn small-cave?
   [cave]
   (Character/isLowerCase (first (name cave))))
 
+(defn find-caves-part1
+  [adjacent-caves cave path]
+  (let [adjacent (get adjacent-caves cave #{})
+        visited-small-caves (filter small-cave? path)]
+    (reduce disj adjacent visited-small-caves)))
+
+(defn find-caves-part2
+  [adjacent-caves cave path]
+  (let [adjacent (disj (get adjacent-caves cave #{}) 'start)
+        visited-small-caves (filter small-cave? path)
+        small-cave-visited-twice? (some #{2} (vals (frequencies visited-small-caves)))]
+    (if small-cave-visited-twice?
+      (reduce disj adjacent (filter small-cave? path))
+      adjacent)))
+
 (defn cave-paths
-  [adjacent-caves]
+  [find-caves adjacent-caves]
   (loop [pending-paths [['start]]
          finished-paths '()]
     (if (empty? pending-paths)
       finished-paths
       (let [path (peek pending-paths)
             cave (peek path)
-            next-caves (reduce disj
-                               (get adjacent-caves cave #{})
-                               (filter small-cave? path))
+            next-caves (find-caves adjacent-caves cave path)
             remaining-paths (pop pending-paths)]
         (if (= cave 'end)
           (recur remaining-paths
@@ -36,7 +50,16 @@
     (map symbol (re-seq #"\w+" line))))
 
 (def part1
-  (comp count cave-paths cave-graph parse-cave-map))
+  (comp count
+        (partial cave-paths find-caves-part1)
+        cave-graph
+        parse-cave-map))
+
+(def part2
+  (comp count
+        (partial cave-paths find-caves-part2)
+        cave-graph
+        parse-cave-map))
 
 (defn with-line-seq
   [file-name func]
@@ -68,5 +91,11 @@
 
 (deftest part1-input
   (is (= 4186 (with-line-seq "day-12-input.txt" part1))))
+
+(deftest part2-example
+  (is (= 36 (with-line-seq "day-12-example.txt" part2))))
+
+(deftest part2-input
+  (is (= 92111 (with-line-seq "day-12-input.txt" part2))))
 
 (run-tests 'adventofcode.2021.day-12)
