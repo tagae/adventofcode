@@ -47,6 +47,18 @@
         right (dec (column-count risk-levels))]
     ((safest-path risk-levels) [bottom right])))
 
+(defn expanded-board
+  [risk-levels]
+  (reduce into []
+          (for [j (range 0 5)]
+            (mapv
+             (fn [row]
+               (reduce into
+                       []
+                       (for [i (range 0 5)]
+                         (map #(inc (mod (dec (+ j i %)) 9)) row))))
+             risk-levels))))
+
 (defn with-line-seq
   [file-name func]
   (with-open [rdr (clojure.java.io/reader file-name)]
@@ -59,5 +71,13 @@
 (deftest part1-input
   (is (= 553 (with-line-seq "day-15-input.txt"
                (comp part1 parse-risk-levels)))))
+
+(deftest part2-example
+  (is (= 315 (with-line-seq "day-15-example.txt"
+               (comp part1 expanded-board parse-risk-levels)))))
+
+(deftest part2-input
+  (is (= 2858 (with-line-seq "day-15-input.txt"
+                (comp part1 expanded-board parse-risk-levels)))))
 
 (run-tests 'adventofcode.2021.day-15)
