@@ -101,6 +101,38 @@
 (def part1
   (comp sum-version-numbers decode-bits parse-packet))
 
+(defn decode-exp
+  [input]
+  (decode-bits (parse-packet input)))
+
+(defn greater-than
+  [a b]
+  (if (> a b) 1 0))
+
+(defn less-than
+  [a b]
+  (if (< a b) 1 0))
+
+(defn equal-to
+  [a b]
+  (if (= a b) 1 0))
+
+(defn eval-exp
+  [exp]
+  (condp = (:type exp)
+    0 (apply + (map eval-exp (:sub-packets exp)))
+    1 (apply * (map eval-exp (:sub-packets exp)))
+    2 (apply min (map eval-exp (:sub-packets exp)))
+    3 (apply max (map eval-exp (:sub-packets exp)))
+    4 (:number exp)
+    5 (apply greater-than (map eval-exp (:sub-packets exp)))
+    6 (apply less-than (map eval-exp (:sub-packets exp)))
+    7 (apply equal-to (map eval-exp (:sub-packets exp)))))
+
+(defn part2
+  [input]
+  (eval-exp (decode-exp input)))
+
 (deftest example-1-parsing
   (is (= '[1 1 0 1
            0 0 1 0
@@ -165,5 +197,35 @@
 
 (deftest part-1-input
   (is (= 1014 (part1 (trim-newline (slurp "day-16-input.txt"))))))
+
+(deftest example-literal-eval
+  (is (= 2021 (eval-exp (decode-exp "D2FE28")))))
+
+(deftest example-1-eval
+  (is (= 3 (eval-exp (decode-exp "C200B40A82")))))
+
+(deftest example-2-eval
+  (is (= 54 (eval-exp (decode-exp "04005AC33890")))))
+
+(deftest example-3-eval
+  (is (= 7 (eval-exp (decode-exp "880086C3E88112")))))
+
+(deftest example-4-eval
+  (is (= 9 (eval-exp (decode-exp "CE00C43D881120")))))
+
+(deftest example-5-eval
+  (is (= 1 (eval-exp (decode-exp "D8005AC2A8F0")))))
+
+(deftest example-6-eval
+  (is (= 0 (eval-exp (decode-exp "F600BC2D8F")))))
+
+(deftest example-7-eval
+  (is (= 0 (eval-exp (decode-exp "9C005AC2F8F0")))))
+
+(deftest example-8-eval
+  (is (= 1 (eval-exp (decode-exp "9C0141080250320F1802104A08")))))
+
+(deftest part-2-input
+  (is (= 1922490999789 (part2 (trim-newline (slurp "day-16-input.txt"))))))
 
 (run-tests 'adventofcode.2021.day-16)
