@@ -16,6 +16,7 @@ type Round struct {
 	Me   string
 }
 
+// Part 1 solution
 func tournamentScore(tournament []Round) int {
 	shapeScore := map[string]int{
 		Rock:     1,
