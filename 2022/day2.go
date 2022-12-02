@@ -9,55 +9,106 @@ const (
 	Rock     = "rock"
 	Paper    = "paper"
 	Scissors = "scissors"
+	Win      = 6
+	Draw     = 3
+	Lose     = 0
 )
+
+var theirMoveTranslation = map[string]string{
+	"A": Rock,
+	"B": Paper,
+	"C": Scissors,
+}
+var myMoveTranslation = map[string]string{
+	"X": Rock,
+	"Y": Paper,
+	"Z": Scissors,
+}
+
+var resultTranslation = map[string]int{
+	"X": Lose,
+	"Y": Draw,
+	"Z": Win,
+}
+
+var shapeScore = map[string]int{
+	Rock:     1,
+	Paper:    2,
+	Scissors: 3,
+}
 
 type Round struct {
 	They string
 	Me   string
 }
 
+type RoundHint struct {
+	They   string
+	Result int
+}
+
 // Part 1 solution
-func tournamentScore(tournament []Round) int {
-	shapeScore := map[string]int{
-		Rock:     1,
-		Paper:    2,
-		Scissors: 3,
-	}
+func tournamentScorePart1(tournament []Round) int {
 	roundScore := map[Round]int{
-		Round{Rock, Rock}:         3,
-		Round{Rock, Paper}:        6,
-		Round{Rock, Scissors}:     0,
-		Round{Paper, Rock}:        0,
-		Round{Paper, Paper}:       3,
-		Round{Paper, Scissors}:    6,
-		Round{Scissors, Rock}:     6,
-		Round{Scissors, Paper}:    0,
-		Round{Scissors, Scissors}: 3,
+		Round{Rock, Rock}:         Draw,
+		Round{Rock, Paper}:        Win,
+		Round{Rock, Scissors}:     Lose,
+		Round{Paper, Rock}:        Lose,
+		Round{Paper, Paper}:       Draw,
+		Round{Paper, Scissors}:    Win,
+		Round{Scissors, Rock}:     Win,
+		Round{Scissors, Paper}:    Lose,
+		Round{Scissors, Scissors}: Draw,
 	}
 	return reduce(tournament, 0, func(total int, round Round) int {
 		return total + shapeScore[round.Me] + roundScore[round]
 	})
 }
 
-func parseStrategyGuide(filename string) []Round {
-	moveTranslation := map[string]string{
-		"A": Rock,
-		"B": Paper,
-		"C": Scissors,
-		"X": Rock,
-		"Y": Paper,
-		"Z": Scissors,
+// Part 2 solution
+func tournamentScorePart2(tournament []RoundHint) int {
+	myNeededMove := map[RoundHint]string{
+		RoundHint{Rock, Win}:      Paper,
+		RoundHint{Rock, Draw}:     Rock,
+		RoundHint{Rock, Lose}:     Scissors,
+		RoundHint{Paper, Win}:     Scissors,
+		RoundHint{Paper, Draw}:    Paper,
+		RoundHint{Paper, Lose}:    Rock,
+		RoundHint{Scissors, Win}:  Rock,
+		RoundHint{Scissors, Draw}: Scissors,
+		RoundHint{Scissors, Lose}: Paper,
 	}
-	return mapReduceInput(filename, make([]Round, 0),
+	return reduce(tournament, 0, func(total int, hint RoundHint) int {
+		return total + shapeScore[myNeededMove[hint]] + hint.Result
+	})
+}
+
+func parseStrategyGuidePart1(filename string) []Round {
+	return parseStrategyGuide(filename, func(theirMoveCode string, myMoveCode string) Round {
+		return Round{
+			They: theirMoveTranslation[theirMoveCode],
+			Me:   myMoveTranslation[myMoveCode],
+		}
+	})
+}
+
+func parseStrategyGuidePart2(filename string) []RoundHint {
+	return parseStrategyGuide(filename, func(theirMoveCode string, resultCode string) RoundHint {
+		return RoundHint{
+			They:   theirMoveTranslation[theirMoveCode],
+			Result: resultTranslation[resultCode],
+		}
+	})
+}
+
+func parseStrategyGuide[T any](filename string, move func(theirMove string, myMove string) T) []T {
+	return mapReduceInput(filename, make([]T, 0),
 		func(line string) bool {
 			return false
 		},
-		func(moves []Round, line string) []Round {
+		func(moves []T, line string) []T {
 			var theirMove, myMove string
 			fmt.Fscanf(strings.NewReader(line), "%s %s", &theirMove, &myMove)
-			return append(moves, Round{
-				They: moveTranslation[theirMove],
-				Me:   moveTranslation[myMove],
-			})
+			return append(moves, move(theirMove, myMove))
 		})
 }
