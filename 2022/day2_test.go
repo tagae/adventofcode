@@ -11,13 +11,13 @@ func TestStrategyGuideParsing(t *testing.T) {
 		{Paper, Rock},
 		{Scissors, Scissors},
 	}
-	assert.Equal(t, expected, parseStrategyGuide("day2-sample.txt"))
+	assert.Equal(t, expected, parseStrategyGuide("day2_sample.txt"))
 }
 
 func TestTournamentScoreOnSample(t *testing.T) {
-	assert.Equal(t, 15, tournamentScore(parseStrategyGuide("day2-sample.txt")))
+	assert.Equal(t, 15, tournamentScore(parseStrategyGuide("day2_sample.txt")))
 }
 
 func TestTournamentScoreOnInput(t *testing.T) {
-	assert.Equal(t, 12679, tournamentScore(parseStrategyGuide("day2-input.txt")))
+	assert.Equal(t, 12679, tournamentScore(parseStrategyGuide("day2_input.txt")))
 }
