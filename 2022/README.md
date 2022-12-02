@@ -1,0 +1,1 @@
+At this point in time I'm an _absolute newbie_ in Go. Please bear my ignorance.
