@@ -1,8 +1,9 @@
-package day1
+package main
 
 import (
 	"bufio"
 	"os"
+	"sort"
 	"strconv"
 )
 
@@ -16,6 +17,16 @@ func findMostCaloricInventory(inventories [][]int) int {
 		}
 	}
 	return max
+}
+
+// Part 2 solution
+func findThreeTopInventories(inventories [][]int) int {
+	sort.Slice(inventories, func(i, j int) bool {
+		return sumInventory(inventories[i]) > sumInventory(inventories[j])
+	})
+	return reduce(inventories[:3], 0, func(total int, inventory []int) int {
+		return total + sumInventory(inventory)
+	})
 }
 
 func sumInventory(inventory []int) int {
@@ -71,4 +82,12 @@ func mapInput[T any](filename string, f func(*bufio.Scanner) T) T {
 	}
 	defer file.Close()
 	return f(bufio.NewScanner(file))
+}
+
+func reduce[A any, T any](array []T, initValue A, f func(A, T) A) A {
+	accumulator := initValue
+	for _, item := range array {
+		accumulator = f(accumulator, item)
+	}
+	return accumulator
 }
