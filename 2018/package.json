@@ -30,7 +30,7 @@
   "dependencies": {
     "@types/node": "^10.12.12",
     "@types/ramda": "^0.25.44",
-    "nodemon": "^2.0.15",
+    "nodemon": "^2.0.20",
     "ramda": "^0.26.1",
     "rxjs": "^6.3.3",
     "ts-node": "^7.0.1",
