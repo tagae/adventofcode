@@ -22,7 +22,7 @@ func reduce[A any, T any](array []T, initValue A, f func(A, T) A) A {
 	return accumulator
 }
 
-func reduceInput[A any](scanner *bufio.Scanner, initValue A, shortCircuit func(string) bool, f func(A, string) A) A {
+func reduceInputWithShortCircuit[A any](scanner *bufio.Scanner, initValue A, shortCircuit func(string) bool, f func(A, string) A) A {
 	accumulator := initValue
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -34,8 +34,13 @@ func reduceInput[A any](scanner *bufio.Scanner, initValue A, shortCircuit func(s
 	return accumulator
 }
 
-func mapReduceInput[A any](filename string, initValue A, shortCircuit func(string) bool, m func(A, string) A) A {
+func mapReduceInputWithShortCircuit[A any](filename string, initValue A, shortCircuit func(string) bool, m func(A, string) A) A {
 	return mapInput(filename, func(scanner *bufio.Scanner) A {
-		return reduceInput(scanner, initValue, shortCircuit, m)
+		return reduceInputWithShortCircuit(scanner, initValue, shortCircuit, m)
 	})
+}
+
+func mapReduceInput[A any](filename string, initValue A, m func(A, string) A) A {
+	neverShortCircuit := func(s string) bool { return false }
+	return mapReduceInputWithShortCircuit(filename, initValue, neverShortCircuit, m)
 }

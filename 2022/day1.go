@@ -49,7 +49,7 @@ func parseInput(filename string) [][]int {
 }
 
 func parseInventory(scanner *bufio.Scanner) []int {
-	return reduceInput(scanner, make([]int, 0),
+	return reduceInputWithShortCircuit(scanner, make([]int, 0),
 		func(line string) bool {
 			return len(line) <= 0
 		},

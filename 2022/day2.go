@@ -103,9 +103,6 @@ func parseStrategyGuidePart2(filename string) []RoundHint {
 
 func parseStrategyGuide[T any](filename string, move func(theirMove string, myMove string) T) []T {
 	return mapReduceInput(filename, make([]T, 0),
-		func(line string) bool {
-			return false
-		},
 		func(moves []T, line string) []T {
 			var theirMove, myMove string
 			fmt.Fscanf(strings.NewReader(line), "%s %s", &theirMove, &myMove)
