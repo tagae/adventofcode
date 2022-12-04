@@ -37,7 +37,7 @@ func sumInventory(inventory []int) int {
 }
 
 func parseInput(filename string) [][]int {
-	return mapInput(filename, func(scanner *bufio.Scanner) [][]int {
+	return scanFile(filename, func(scanner *bufio.Scanner) [][]int {
 		var inventories [][]int
 		currentInventory := parseInventory(scanner)
 		for len(currentInventory) > 0 {
@@ -49,7 +49,7 @@ func parseInput(filename string) [][]int {
 }
 
 func parseInventory(scanner *bufio.Scanner) []int {
-	return reduceInputWithShortCircuit(scanner, make([]int, 0),
+	return reduceLinesWithShortCircuit(scanner, make([]int, 0),
 		func(line string) bool {
 			return len(line) <= 0
 		},

@@ -24,7 +24,7 @@ func rucksackItemPriority(item int32) int {
 }
 
 func prioritySumFromFile(filename string) int {
-	return mapReduceInput(filename, 0, func(total int, rucksackItems string) int {
+	return reduceFileLines(filename, 0, func(total int, rucksackItems string) int {
 		return total + rucksackItemPriority(repeatedRucksackItem(rucksackItems))
 	})
 }
