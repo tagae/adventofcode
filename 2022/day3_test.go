@@ -31,6 +31,7 @@ func TestRucksackItemPriority(t *testing.T) {
 		priority int
 	}{
 		{item: 'a', priority: 1},
+		{item: 'r', priority: 18},
 		{item: 'z', priority: 26},
 		{item: 'A', priority: 27},
 		{item: 'Z', priority: 52},
@@ -52,7 +53,45 @@ func TestRucksackItemPrioritySum(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.filename, func(t *testing.T) {
-			assert.Equal(t, testCase.prioritySum, prioritySumFromFile(testCase.filename))
+			assert.Equal(t, testCase.prioritySum, repeatedRucksackItemPrioritySumFromFile(testCase.filename))
+		})
+	}
+}
+
+func TestRucksackGroupCommonItem(t *testing.T) {
+	testCases := []struct {
+		rucksackContent [3]string
+		commonItem      int32
+	}{
+		{rucksackContent: [3]string{
+			"vJrwpWtwJgWrhcsFMMfFFhFp",
+			"jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+			"PmmdzqPrVvPwwTWBwg",
+		}, commonItem: 'r'},
+		{rucksackContent: [3]string{
+			"wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+			"ttgJtRGJQctTZtZT",
+			"CrZsJsPPZsGzwwsLwLmpwMDw",
+		}, commonItem: 'Z'},
+	}
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Common %c", testCase.commonItem), func(t *testing.T) {
+			assert.Equal(t, testCase.commonItem, commonRucksackGroupItem(testCase.rucksackContent))
+		})
+	}
+}
+
+func TestRucksackCommonItem(t *testing.T) {
+	testCases := []struct {
+		filename    string
+		prioritySum int
+	}{
+		{filename: "day3_sample.txt", prioritySum: 70},
+		{filename: "day3_input.txt", prioritySum: 2607},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.filename, func(t *testing.T) {
+			assert.Equal(t, testCase.prioritySum, commonItemPrioritySumFromFile(testCase.filename))
 		})
 	}
 }
